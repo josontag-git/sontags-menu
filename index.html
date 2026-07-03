@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#2a9d8f" />
+<title>Sontag's Menu</title>
+<link rel="manifest" href="manifest.json" />
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
+<link rel="icon" href="icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Sontag's Menu" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+<header class="app-header">
+  <div class="brand">
+    <img src="icons/icon-192.png" alt="" class="brand-icon" />
+    <span class="brand-title">Sontag's Menu</span>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button class="tab-btn active" data-view="week" role="tab" aria-selected="true">Wochenplan</button>
+    <button class="tab-btn" data-view="pool" role="tab" aria-selected="false">Rezepte</button>
+  </nav>
+  <div class="header-actions">
+    <button id="refreshBtn" class="icon-btn" title="Aktualisieren" aria-label="Aktualisieren">⟳</button>
+    <button id="settingsBtn" class="icon-btn" title="Einstellungen" aria-label="Einstellungen">⚙</button>
+  </div>
+</header>
+
+<main>
+  <!-- Wochenplan-Ansicht -->
+  <section id="weekView" class="view active">
+    <div class="week-nav">
+      <button id="prevWeekBtn" class="icon-btn" aria-label="Vorherige Woche">‹</button>
+      <div class="week-label">
+        <div id="weekTitle">KW 27</div>
+        <div id="weekRange" class="week-range">29.06. – 05.07.</div>
+      </div>
+      <button id="nextWeekBtn" class="icon-btn" aria-label="Nächste Woche">›</button>
+    </div>
+
+    <ol id="weekDays" class="week-days"></ol>
+
+    <div class="week-footer">
+      <span id="syncStatus" class="sync-status"></span>
+      <button id="saveWeekBtn" class="btn primary">Woche speichern</button>
+    </div>
+
+    <h2 class="pool-subheading">Rezepte-Pool <span class="hint">(zum Zuweisen auf einen Tag ziehen)</span></h2>
+    <div id="weekPoolList" class="recipe-pool compact"></div>
+  </section>
+
+  <!-- Rezepte-Pool-Ansicht -->
+  <section id="poolView" class="view">
+    <div class="pool-toolbar">
+      <button id="addRecipeBtn" class="btn primary">+ Neues Rezept</button>
+    </div>
+    <div id="poolList" class="recipe-pool"></div>
+    <p id="poolEmptyHint" class="empty-hint hidden">Noch keine Rezepte im Pool. Lege dein erstes Rezept an!</p>
+  </section>
+</main>
+
+<!-- Modal: Rezept anlegen/bearbeiten -->
+<div id="recipeModal" class="modal hidden">
+  <div class="modal-content">
+    <h2 id="recipeModalTitle">Neues Rezept</h2>
+    <form id="recipeForm">
+      <label>
+        Titel *
+        <input type="text" id="rTitle" required placeholder="z. B. Spaghetti Bolognese" />
+      </label>
+      <label>
+        Quelle-URL *
+        <input type="url" id="rSourceUrl" required placeholder="https://cookidoo.de/recipes/recipe/de-DE/..." />
+      </label>
+      <label>
+        Bild-URL
+        <div class="input-with-button">
+          <input type="url" id="rThumbUrl" placeholder="https://..." />
+          <button type="button" id="autoThumbBtn" class="btn-small">Automatisch versuchen</button>
+        </div>
+        <span id="autoThumbStatus" class="field-hint"></span>
+      </label>
+      <div id="rThumbPreviewWrap" class="thumb-preview-wrap hidden">
+        <img id="rThumbPreview" class="thumb-preview" alt="Vorschau" />
+      </div>
+      <label>
+        Notiz
+        <textarea id="rNote" rows="2" placeholder="z. B. Ohne Sahne, Kinder mögen's mild"></textarea>
+      </label>
+      <div class="btn-row">
+        <button type="submit" class="btn primary">Speichern</button>
+        <button type="button" id="deleteRecipeBtn" class="btn danger hidden">Löschen</button>
+        <button type="button" id="cancelRecipeBtn" class="btn">Abbrechen</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Einstellungen -->
+<div id="settingsModal" class="modal hidden">
+  <div class="modal-content">
+    <h2>Einstellungen</h2>
+    <label>
+      Apps-Script Web-App-URL
+      <input type="url" id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec" />
+    </label>
+    <p class="field-hint">Verbindet die App mit dem gemeinsamen Google Sheet der Familie. Siehe README für die Einrichtung.</p>
+    <label>
+      Design
+      <select id="themeSelect">
+        <option value="system">System</option>
+        <option value="light">Hell</option>
+        <option value="dark">Dunkel</option>
+      </select>
+    </label>
+    <div class="btn-row">
+      <button id="saveSettingsBtn" class="btn primary">Speichern</button>
+      <button id="closeSettingsBtn" class="btn">Schließen</button>
+    </div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
