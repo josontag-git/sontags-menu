@@ -4,6 +4,9 @@ const STORAGE_PENDING_DAYS = "pendingWeekDays";
 const STORAGE_SCRIPT_URL = "scriptUrl";
 const STORAGE_THEME = "themeMode";
 
+// Standard-Verbindung zum gemeinsamen Familien-Sheet. In den Einstellungen ueberschreibbar.
+const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhZOVVg8KdMcjCF7uwjXXsK7DJH_QvxpaGGoU3RT0MtnHQumsFFIkwJtVXr0H1WTk/exec";
+
 const DAYS = [
   { key: "mon", label: "Mo" },
   { key: "tue", label: "Di" },
@@ -90,7 +93,7 @@ function unmarkDayPending(weekKey, dayKey) {
   savePendingDays(getPendingDays().filter((k) => k !== key));
 }
 function getScriptUrl() {
-  return localStorage.getItem(STORAGE_SCRIPT_URL) || "";
+  return localStorage.getItem(STORAGE_SCRIPT_URL) || DEFAULT_SCRIPT_URL;
 }
 
 // --- Date helpers ---

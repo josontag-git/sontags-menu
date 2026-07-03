@@ -31,9 +31,11 @@ Die Tabellenblätter "Rezepte" und "Wochenplan" werden beim ersten Speichern aut
 
 ## App mit dem Sheet verbinden
 
-1. In der App auf das Zahnrad-Symbol (⚙) tippen.
-2. Die kopierte Web-App-URL einfügen, speichern.
-3. Jedes Familienmitglied, das die App nutzt, trägt dieselbe URL in seinen Einstellungen ein – dann sehen alle denselben Rezepte-Pool und Wochenplan.
+Die Web-App-URL der Familie ist bereits fest in [`app.js`](app.js) als `DEFAULT_SCRIPT_URL` hinterlegt – neue Geräte müssen nichts einstellen, alle sehen automatisch denselben Rezepte-Pool und Wochenplan.
+
+Soll stattdessen ein anderes/eigenes Sheet verwendet werden (z. B. zum Testen), lässt sich das über das Zahnrad-Symbol (⚙) → Apps-Script-URL überschreiben; die dort eingetragene URL hat Vorrang vor dem Standardwert.
+
+Da die URL öffentlich im Repo sichtbar ist (Zugriff über "Jeder" ist notwendig, damit die App ohne Google-Login lesen/schreiben kann), kennt theoretisch jeder mit Repo-Zugriff die URL und könnte Daten im Sheet ändern. Für ein privates Familien-Tool ist das ein bewusst in Kauf genommenes, geringes Risiko.
 
 ## Hell/Dunkel-Modus
 
