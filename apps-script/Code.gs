@@ -137,9 +137,30 @@ function getOrCreateSheet(name, headers) {
   if (!sheet) {
     sheet = ss.insertSheet(name);
     sheet.appendRow(headers);
-  } else if (sheet.getLastRow() <= 1) {
-    // Sheet ist noch leer (nur Kopfzeile oder ganz leer) - Kopfzeile gefahrlos an neues Schema anpassen.
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    return sheet;
   }
+
+  const currentHeaders = sheet.getLastColumn() > 0
+    ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]
+    : [];
+  const headersMatch =
+    headers.length === currentHeaders.length && headers.every((h, i) => currentHeaders[i] === h);
+  if (headersMatch) return sheet;
+
+  if (sheet.getLastRow() <= 1) {
+    // Nur Kopfzeile oder ganz leer - gefahrlos ueberschreiben.
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+    return sheet;
+  }
+
+  if (name === SHEET_RECIPES && currentHeaders.length === 6) {
+    // Migration: bestehende Rezepte-Zeilen im alten Schema (ohne Labels-Spalte)
+    // auf das neue 7-Spalten-Schema heben, ohne Daten zu verlieren.
+    const numDataRows = sheet.getLastRow() - 1;
+    const oldData = sheet.getRange(2, 1, numDataRows, 6).getValues();
+    const newData = oldData.map((r) => [r[0], r[1], r[2], r[3], "", r[4], r[5]]);
+    sheet.getRange(2, 1, numDataRows, 7).setValues(newData);
+  }
+  sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   return sheet;
 }
