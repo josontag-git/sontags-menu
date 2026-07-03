@@ -140,11 +140,12 @@ function getOrCreateSheet(name, headers) {
     return sheet;
   }
 
-  const currentHeaders = sheet.getLastColumn() > 0
-    ? sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0]
-    : [];
-  const headersMatch =
-    headers.length === currentHeaders.length && headers.every((h, i) => currentHeaders[i] === h);
+  // Immer mindestens so viele Spalten lesen wie das neue Schema erwartet - vermeidet
+  // falsche Laengen-Vergleiche, wenn irgendeine Datenzeile zufaellig mehr Spalten belegt
+  // als die Kopfzeile (z. B. durch eine einzelne bereits aktualisierte Zeile).
+  const width = Math.max(sheet.getLastColumn(), headers.length);
+  const currentHeaders = width > 0 ? sheet.getRange(1, 1, 1, width).getValues()[0] : [];
+  const headersMatch = headers.every((h, i) => currentHeaders[i] === h);
   if (headersMatch) return sheet;
 
   if (sheet.getLastRow() <= 1) {
@@ -153,7 +154,7 @@ function getOrCreateSheet(name, headers) {
     return sheet;
   }
 
-  if (name === SHEET_RECIPES && currentHeaders.length === 6) {
+  if (name === SHEET_RECIPES && currentHeaders[4] !== "Labels") {
     // Migration: bestehende Rezepte-Zeilen im alten Schema (ohne Labels-Spalte)
     // auf das neue 7-Spalten-Schema heben, ohne Daten zu verlieren.
     const numDataRows = sheet.getLastRow() - 1;
