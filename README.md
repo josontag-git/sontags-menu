@@ -10,9 +10,10 @@ Progressive Web App zur gemeinsamen Essensplanung für die Familie. Rezepte-Pool
 
 ## Funktionen
 
-- **Rezepte-Pool**: Rezepte mit Titel, Quelle-URL (beliebige Website oder Cookidoo-Link), Bild-URL und Notiz anlegen, bearbeiten, löschen.
+- **Rezepte-Pool**: Rezepte mit Titel, Quelle-URL (beliebige Website oder Cookidoo-Link), Bild-URL, Labels und Notiz anlegen, bearbeiten, löschen.
 - **Automatisches Vorschaubild**: Beim Anlegen eines Rezepts kann über "Automatisch versuchen" das Vorschaubild (`og:image`) der Quell-Website automatisch geholt werden (über einen öffentlichen CORS-Proxy). Klappt das nicht (z. B. bei Cookidoo, das Inhalte per JavaScript nachlädt), einfach die Bild-URL manuell eintragen – z. B. per Rechtsklick auf ein Bild der Rezeptseite → "Bildadresse kopieren".
-- **Wochenplan**: Rezepte aus dem Pool per Drag & Drop (Maus oder Touch) auf einen Wochentag ziehen, zwischen Tagen verschieben oder per ✕ wieder entfernen. Über die Pfeile lässt sich zwischen den Kalenderwochen navigieren.
+- **Labels & Filter**: Im Rezeptformular lassen sich beliebige, mit Komma getrennte Labels eintragen (z. B. "vegetarisch, schnell, kinderfreundlich"). Sie erscheinen als Filter-Chips über dem Rezepte-Pool und im Wochenplan – ein Klick blendet alle Rezepte ohne dieses Label aus.
+- **Wochenplan**: Rezepte aus dem Pool per Drag & Drop am Griff-Symbol (⠿, Maus oder Touch) auf einen Wochentag ziehen, zwischen Tagen verschieben oder per ✕ wieder entfernen. Über die Pfeile lässt sich zwischen den Kalenderwochen navigieren.
 - **Speichern**: Änderungen werden laufend automatisch synchronisiert; "Woche speichern" stößt zusätzlich eine sofortige Synchronisierung aller noch offenen Änderungen an. Der Button ⟳ oben lädt den aktuellen Stand aus dem Sheet (z. B. wenn ein Familienmitglied auf einem anderen Gerät etwas geändert hat).
 
 ## Google Sheet einrichten (einmalig)
@@ -29,6 +30,8 @@ Progressive Web App zur gemeinsamen Essensplanung für die Familie. Rezepte-Pool
 
 Die Tabellenblätter "Rezepte" und "Wochenplan" werden beim ersten Speichern automatisch angelegt.
 
+**Wichtig bei Updates von `Code.gs`** (z. B. nach dem Hinzufügen der Labels-Spalte): Ein reines Speichern im Apps-Script-Editor reicht nicht – die bereits veröffentlichte Web-App-URL bleibt sonst auf dem alten Code-Stand eingefroren. Nach jeder Änderung an `Code.gs` im Editor zusätzlich **Bereitstellen → Bereitstellungen verwalten → Stift-Symbol → Version: Neue Version → Bereitstellen** ausführen (die URL bleibt dabei gleich).
+
 ## App mit dem Sheet verbinden
 
 Die Web-App-URL der Familie ist bereits fest in [`app.js`](app.js) als `DEFAULT_SCRIPT_URL` hinterlegt – neue Geräte müssen nichts einstellen, alle sehen automatisch denselben Rezepte-Pool und Wochenplan.
@@ -37,9 +40,9 @@ Soll stattdessen ein anderes/eigenes Sheet verwendet werden (z. B. zum Testen), 
 
 Da die URL öffentlich im Repo sichtbar ist (Zugriff über "Jeder" ist notwendig, damit die App ohne Google-Login lesen/schreiben kann), kennt theoretisch jeder mit Repo-Zugriff die URL und könnte Daten im Sheet ändern. Für ein privates Familien-Tool ist das ein bewusst in Kauf genommenes, geringes Risiko.
 
-## Hell/Dunkel-Modus
+## Design
 
-In den Einstellungen unter "Design" lässt sich zwischen Hell, Dunkel und System (folgt der Geräte-Einstellung) wählen.
+In den Einstellungen unter "Design" lässt sich zwischen Hell, Dunkel, System (folgt der Geräte-Einstellung), Knallbunt (verspielte Regenbogenfarben je Wochentag/Rezept) und Neon (dunkler Hintergrund mit Glow-Akzenten) wählen.
 
 ## Hosting (GitHub Pages)
 

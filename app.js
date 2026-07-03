@@ -3,6 +3,7 @@ const STORAGE_WEEKPLANS = "weekPlans";
 const STORAGE_PENDING_DAYS = "pendingWeekDays";
 const STORAGE_SCRIPT_URL = "scriptUrl";
 const STORAGE_THEME = "themeMode";
+const STORAGE_LABEL_FILTER = "activeLabelFilters";
 
 // Standard-Verbindung zum gemeinsamen Familien-Sheet. In den Einstellungen ueberschreibbar.
 const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhZOVVg8KdMcjCF7uwjXXsK7DJH_QvxpaGGoU3RT0MtnHQumsFFIkwJtVXr0H1WTk/exec";
@@ -35,6 +36,8 @@ const syncStatusEl = document.getElementById("syncStatus");
 const poolListEl = document.getElementById("poolList");
 const poolEmptyHintEl = document.getElementById("poolEmptyHint");
 const addRecipeBtn = document.getElementById("addRecipeBtn");
+const poolLabelFilterEl = document.getElementById("poolLabelFilter");
+const weekLabelFilterEl = document.getElementById("weekLabelFilter");
 
 const recipeModal = document.getElementById("recipeModal");
 const recipeModalTitleEl = document.getElementById("recipeModalTitle");
@@ -42,6 +45,7 @@ const recipeForm = document.getElementById("recipeForm");
 const rTitleInput = document.getElementById("rTitle");
 const rSourceUrlInput = document.getElementById("rSourceUrl");
 const rThumbUrlInput = document.getElementById("rThumbUrl");
+const rLabelsInput = document.getElementById("rLabels");
 const rNoteInput = document.getElementById("rNote");
 const autoThumbBtn = document.getElementById("autoThumbBtn");
 const autoThumbStatusEl = document.getElementById("autoThumbStatus");
@@ -94,6 +98,67 @@ function unmarkDayPending(weekKey, dayKey) {
 }
 function getScriptUrl() {
   return localStorage.getItem(STORAGE_SCRIPT_URL) || DEFAULT_SCRIPT_URL;
+}
+function getActiveLabelFilters() {
+  return JSON.parse(localStorage.getItem(STORAGE_LABEL_FILTER) || "[]");
+}
+function saveActiveLabelFilters(arr) {
+  localStorage.setItem(STORAGE_LABEL_FILTER, JSON.stringify(arr));
+}
+function toggleLabelFilter(label) {
+  const key = label.toLowerCase();
+  const active = getActiveLabelFilters();
+  const idx = active.indexOf(key);
+  if (idx === -1) active.push(key);
+  else active.splice(idx, 1);
+  saveActiveLabelFilters(active);
+  renderPool();
+  renderWeek();
+}
+function parseLabelsInput(value) {
+  const seen = new Set();
+  const result = [];
+  value
+    .split(",")
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .forEach((label) => {
+      const key = label.toLowerCase();
+      if (!seen.has(key)) {
+        seen.add(key);
+        result.push(label);
+      }
+    });
+  return result;
+}
+function getAllLabels(recipes) {
+  const map = new Map();
+  recipes.forEach((r) => (r.labels || []).forEach((l) => map.set(l.toLowerCase(), l)));
+  return [...map.values()].sort((a, b) => a.localeCompare(b, "de"));
+}
+function filterByLabels(recipes) {
+  const active = getActiveLabelFilters();
+  if (active.length === 0) return recipes;
+  return recipes.filter((r) => (r.labels || []).some((l) => active.includes(l.toLowerCase())));
+}
+function renderLabelFilterBar(container, recipes) {
+  const labels = getAllLabels(recipes);
+  const active = getActiveLabelFilters();
+  container.innerHTML = "";
+  if (labels.length === 0) {
+    container.classList.add("hidden");
+    return;
+  }
+  container.classList.remove("hidden");
+  labels.forEach((label) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "label-chip";
+    chip.classList.toggle("active", active.includes(label.toLowerCase()));
+    chip.textContent = label;
+    chip.addEventListener("click", () => toggleLabelFilter(label));
+    container.appendChild(chip);
+  });
 }
 
 // --- Date helpers ---
@@ -203,6 +268,17 @@ function createRecipeCard(recipe, { draggable = false, showActions = false } = {
   source.textContent = hostnameFromUrl(recipe.sourceUrl);
   source.addEventListener("pointerdown", (e) => e.stopPropagation());
   body.append(title, source);
+  if (recipe.labels && recipe.labels.length) {
+    const labelsEl = document.createElement("div");
+    labelsEl.className = "recipe-labels";
+    recipe.labels.forEach((l) => {
+      const badge = document.createElement("span");
+      badge.className = "recipe-label-badge";
+      badge.textContent = l;
+      labelsEl.appendChild(badge);
+    });
+    body.appendChild(labelsEl);
+  }
   card.appendChild(body);
 
   if (showActions) {
@@ -223,7 +299,12 @@ function createRecipeCard(recipe, { draggable = false, showActions = false } = {
 
   if (draggable) {
     card.classList.add("draggable-card");
-    attachDragHandlers(card, recipe, null);
+    const handle = document.createElement("div");
+    handle.className = "drag-handle drag-handle-corner";
+    handle.textContent = "⠿";
+    handle.setAttribute("aria-label", "Ziehpunkt");
+    card.appendChild(handle);
+    attachDragHandlers(handle, card, recipe, null);
   }
 
   return card;
@@ -266,21 +347,35 @@ function createAssignedCard(recipe, dayKey) {
   });
   wrap.appendChild(clearBtn);
 
-  attachDragHandlers(wrap, recipe, dayKey);
+  const handle = document.createElement("div");
+  handle.className = "drag-handle";
+  handle.textContent = "⠿";
+  handle.setAttribute("aria-label", "Ziehpunkt");
+  wrap.insertBefore(handle, wrap.firstChild);
+
+  attachDragHandlers(handle, wrap, recipe, dayKey);
   return wrap;
 }
 
 function renderPool() {
   const recipes = getRecipes();
+  renderLabelFilterBar(poolLabelFilterEl, recipes);
+  const filtered = filterByLabels(recipes);
   poolListEl.innerHTML = "";
-  recipes.forEach((r) => poolListEl.appendChild(createRecipeCard(r, { showActions: true })));
-  poolEmptyHintEl.classList.toggle("hidden", recipes.length > 0);
+  filtered.forEach((r) => poolListEl.appendChild(createRecipeCard(r, { showActions: true })));
+  poolEmptyHintEl.classList.toggle("hidden", filtered.length > 0);
+  poolEmptyHintEl.textContent =
+    recipes.length === 0
+      ? "Noch keine Rezepte im Pool. Lege dein erstes Rezept an!"
+      : "Keine Rezepte mit den gewählten Labels.";
 }
 
 function renderWeekPool() {
   const recipes = getRecipes();
+  renderLabelFilterBar(weekLabelFilterEl, recipes);
+  const filtered = filterByLabels(recipes);
   weekPoolListEl.innerHTML = "";
-  recipes.forEach((r) => weekPoolListEl.appendChild(createRecipeCard(r, { draggable: true })));
+  filtered.forEach((r) => weekPoolListEl.appendChild(createRecipeCard(r, { draggable: true })));
 }
 
 function renderWeek() {
@@ -358,10 +453,11 @@ function clearDropHighlight() {
   document.querySelectorAll(".day-slot.drag-over").forEach((d) => d.classList.remove("drag-over"));
 }
 
-function attachDragHandlers(el, recipe, sourceDay) {
-  el.addEventListener("pointerdown", (e) => {
+function attachDragHandlers(handleEl, cardEl, recipe, sourceDay) {
+  handleEl.addEventListener("pointerdown", (e) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
-    beginDrag(e, el, recipe, sourceDay);
+    e.preventDefault();
+    beginDrag(e, cardEl, recipe, sourceDay);
   });
 }
 
@@ -492,6 +588,7 @@ async function syncRecipe(recipe) {
         title: recipe.title,
         sourceUrl: recipe.sourceUrl,
         thumbUrl: recipe.thumbUrl || "",
+        labels: recipe.labels || [],
         note: recipe.note || "",
       }),
     });
@@ -628,6 +725,7 @@ function openRecipeModal(recipe) {
   rTitleInput.value = recipe?.title || "";
   rSourceUrlInput.value = recipe?.sourceUrl || "";
   rThumbUrlInput.value = recipe?.thumbUrl || "";
+  rLabelsInput.value = (recipe?.labels || []).join(", ");
   rNoteInput.value = recipe?.note || "";
   autoThumbStatusEl.textContent = "";
   deleteRecipeBtn.classList.toggle("hidden", !recipe);
@@ -647,6 +745,7 @@ recipeForm.addEventListener("submit", (e) => {
   const title = rTitleInput.value.trim();
   const sourceUrl = rSourceUrlInput.value.trim();
   const thumbUrl = rThumbUrlInput.value.trim();
+  const labels = parseLabelsInput(rLabelsInput.value);
   const note = rNoteInput.value.trim();
   if (!title || !sourceUrl) return;
 
@@ -658,6 +757,7 @@ recipeForm.addEventListener("submit", (e) => {
       recipe.title = title;
       recipe.sourceUrl = sourceUrl;
       recipe.thumbUrl = thumbUrl;
+      recipe.labels = labels;
       recipe.note = note;
       recipe.synced = false;
     }
@@ -667,6 +767,7 @@ recipeForm.addEventListener("submit", (e) => {
       title,
       sourceUrl,
       thumbUrl,
+      labels,
       note,
       synced: false,
     };

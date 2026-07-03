@@ -32,24 +32,23 @@ function jsonOutput(obj) {
 
 // --- Rezepte ---
 
+const RECIPE_HEADERS = ["ID", "Titel", "Quelle-URL", "Bild-URL", "Labels", "Notiz", "Zuletzt aktualisiert"];
+
 function upsertRecipeRow(data) {
-  const sheet = getOrCreateSheet(SHEET_RECIPES, [
-    "ID", "Titel", "Quelle-URL", "Bild-URL", "Notiz", "Zuletzt aktualisiert",
-  ]);
+  const sheet = getOrCreateSheet(SHEET_RECIPES, RECIPE_HEADERS);
   upsertRow(sheet, data.id, [
     data.id,
     data.title || "",
     data.sourceUrl || "",
     data.thumbUrl || "",
+    (data.labels || []).join(", "),
     data.note || "",
     new Date(),
   ]);
 }
 
 function deleteRecipeRow(id) {
-  const sheet = getOrCreateSheet(SHEET_RECIPES, [
-    "ID", "Titel", "Quelle-URL", "Bild-URL", "Notiz", "Zuletzt aktualisiert",
-  ]);
+  const sheet = getOrCreateSheet(SHEET_RECIPES, RECIPE_HEADERS);
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) return;
   const ids = sheet.getRange(2, 1, lastRow - 1, 1).getValues();
@@ -62,12 +61,10 @@ function deleteRecipeRow(id) {
 }
 
 function readRecipes() {
-  const sheet = getOrCreateSheet(SHEET_RECIPES, [
-    "ID", "Titel", "Quelle-URL", "Bild-URL", "Notiz", "Zuletzt aktualisiert",
-  ]);
+  const sheet = getOrCreateSheet(SHEET_RECIPES, RECIPE_HEADERS);
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) return [];
-  const rows = sheet.getRange(2, 1, lastRow - 1, 5).getValues();
+  const rows = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
   return rows
     .filter((r) => r[0])
     .map((r) => ({
@@ -75,7 +72,11 @@ function readRecipes() {
       title: r[1] || "",
       sourceUrl: r[2] || "",
       thumbUrl: r[3] || "",
-      note: r[4] || "",
+      labels: String(r[4] || "")
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      note: r[5] || "",
     }));
 }
 
@@ -136,6 +137,9 @@ function getOrCreateSheet(name, headers) {
   if (!sheet) {
     sheet = ss.insertSheet(name);
     sheet.appendRow(headers);
+  } else if (sheet.getLastRow() <= 1) {
+    // Sheet ist noch leer (nur Kopfzeile oder ganz leer) - Kopfzeile gefahrlos an neues Schema anpassen.
+    sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
   }
   return sheet;
 }

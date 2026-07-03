@@ -49,6 +49,7 @@
     </div>
 
     <h2 class="pool-subheading">Rezepte-Pool <span class="hint">(zum Zuweisen auf einen Tag ziehen)</span></h2>
+    <div id="weekLabelFilter" class="label-filter"></div>
     <div id="weekPoolList" class="recipe-pool compact"></div>
   </section>
 
@@ -57,6 +58,7 @@
     <div class="pool-toolbar">
       <button id="addRecipeBtn" class="btn primary">+ Neues Rezept</button>
     </div>
+    <div id="poolLabelFilter" class="label-filter"></div>
     <div id="poolList" class="recipe-pool"></div>
     <p id="poolEmptyHint" class="empty-hint hidden">Noch keine Rezepte im Pool. Lege dein erstes Rezept an!</p>
   </section>
@@ -87,6 +89,11 @@
         <img id="rThumbPreview" class="thumb-preview" alt="Vorschau" />
       </div>
       <label>
+        Labels
+        <input type="text" id="rLabels" placeholder="z. B. vegetarisch, schnell, kinderfreundlich" />
+        <span class="field-hint">Mit Komma getrennt – ergeben Filter-Chips im Rezepte-Pool.</span>
+      </label>
+      <label>
         Notiz
         <textarea id="rNote" rows="2" placeholder="z. B. Ohne Sahne, Kinder mögen's mild"></textarea>
       </label>
@@ -114,6 +121,8 @@
         <option value="system">System</option>
         <option value="light">Hell</option>
         <option value="dark">Dunkel</option>
+        <option value="bunt">Knallbunt</option>
+        <option value="neon">Neon</option>
       </select>
     </label>
     <div class="btn-row">
