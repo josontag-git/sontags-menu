@@ -1,4 +1,4 @@
-const CACHE_NAME = "sontags-menu-v3";
+const CACHE_NAME = "were-hungry-v4";
 const ASSETS = [
   "./",
   "index.html",

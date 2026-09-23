@@ -1,4 +1,4 @@
-# Sontag's Menu
+# We're Hungry!
 
 Progressive Web App zur gemeinsamen Essensplanung für die Familie. Rezepte-Pool anlegen, per Drag & Drop auf die Wochentage verteilen, Wochenplan speichern – synchronisiert über ein gemeinsames Google Sheet.
 
@@ -54,4 +54,4 @@ Dieses Repo ist für GitHub Pages vorbereitet – kein Server nötig, alles läu
 
 ## App-Icon
 
-Das Icon (`icons/`) wurde aus der bereitgestellten Grafik "Sontag's Menu" in den benötigten PWA-Größen (192px, 512px, Apple-Touch-Icon 180px) erzeugt.
+Das Icon (`icons/`) wurde aus der ursprünglich bereitgestellten Grafik "Sontag's Menu" in den benötigten PWA-Größen (192px, 512px, Apple-Touch-Icon 180px) erzeugt. Der Schriftzug auf dem Icon selbst zeigt weiterhin "Sontag's Menu", da er fest im Bild eingebrannt ist – für ein passendes Icon zum neuen Namen wird eine neue Grafik benötigt.
