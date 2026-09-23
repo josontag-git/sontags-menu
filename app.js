@@ -4,6 +4,8 @@ const STORAGE_PENDING_DAYS = "pendingWeekDays";
 const STORAGE_SCRIPT_URL = "scriptUrl";
 const STORAGE_THEME = "themeMode";
 const STORAGE_LABEL_FILTER = "activeLabelFilters";
+const STORAGE_GOOGLE_API_KEY = "googleApiKey";
+const STORAGE_GOOGLE_CSE_ID = "googleCseId";
 
 // Standard-Verbindung zum gemeinsamen Familien-Sheet. In den Einstellungen ueberschreibbar.
 const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhZOVVg8KdMcjCF7uwjXXsK7DJH_QvxpaGGoU3RT0MtnHQumsFFIkwJtVXr0H1WTk/exec";
@@ -43,25 +45,47 @@ const recipeModal = document.getElementById("recipeModal");
 const recipeModalTitleEl = document.getElementById("recipeModalTitle");
 const recipeForm = document.getElementById("recipeForm");
 const rTitleInput = document.getElementById("rTitle");
+const rIsOwnInput = document.getElementById("rIsOwn");
+const sourceUrlFieldEl = document.getElementById("sourceUrlField");
+const ownRecipeFieldsEl = document.getElementById("ownRecipeFields");
 const rSourceUrlInput = document.getElementById("rSourceUrl");
+const rIngredientsInput = document.getElementById("rIngredients");
+const rInstructionsInput = document.getElementById("rInstructions");
 const rThumbUrlInput = document.getElementById("rThumbUrl");
 const rLabelsInput = document.getElementById("rLabels");
 const rNoteInput = document.getElementById("rNote");
 const autoThumbBtn = document.getElementById("autoThumbBtn");
 const autoThumbStatusEl = document.getElementById("autoThumbStatus");
+const thumbSuggestionsEl = document.getElementById("thumbSuggestions");
 const rThumbPreviewWrapEl = document.getElementById("rThumbPreviewWrap");
 const rThumbPreviewEl = document.getElementById("rThumbPreview");
 const deleteRecipeBtn = document.getElementById("deleteRecipeBtn");
 const cancelRecipeBtn = document.getElementById("cancelRecipeBtn");
 
+const recipeDetailModal = document.getElementById("recipeDetailModal");
+const detailTitleEl = document.getElementById("detailTitle");
+const detailThumbEl = document.getElementById("detailThumb");
+const detailLabelsEl = document.getElementById("detailLabels");
+const detailIngredientsWrapEl = document.getElementById("detailIngredientsWrap");
+const detailIngredientsEl = document.getElementById("detailIngredients");
+const detailInstructionsWrapEl = document.getElementById("detailInstructionsWrap");
+const detailInstructionsEl = document.getElementById("detailInstructions");
+const detailNoteWrapEl = document.getElementById("detailNoteWrap");
+const detailNoteEl = document.getElementById("detailNote");
+const editFromDetailBtn = document.getElementById("editFromDetailBtn");
+const closeDetailBtn = document.getElementById("closeDetailBtn");
+
 const settingsBtn = document.getElementById("settingsBtn");
 const settingsModal = document.getElementById("settingsModal");
 const scriptUrlInput = document.getElementById("scriptUrl");
+const googleApiKeyInput = document.getElementById("googleApiKey");
+const googleCseIdInput = document.getElementById("googleCseId");
 const themeSelect = document.getElementById("themeSelect");
 const saveSettingsBtn = document.getElementById("saveSettingsBtn");
 const closeSettingsBtn = document.getElementById("closeSettingsBtn");
 
 let editingRecipeId = null;
+let detailRecipeId = null;
 let currentMonday = getMonday(new Date());
 
 // --- Storage helpers ---
@@ -98,6 +122,12 @@ function unmarkDayPending(weekKey, dayKey) {
 }
 function getScriptUrl() {
   return localStorage.getItem(STORAGE_SCRIPT_URL) || DEFAULT_SCRIPT_URL;
+}
+function getGoogleApiKey() {
+  return localStorage.getItem(STORAGE_GOOGLE_API_KEY) || "";
+}
+function getGoogleCseId() {
+  return localStorage.getItem(STORAGE_GOOGLE_CSE_ID) || "";
 }
 function getActiveLabelFilters() {
   return JSON.parse(localStorage.getItem(STORAGE_LABEL_FILTER) || "[]");
@@ -238,6 +268,35 @@ function createThumbPlaceholder() {
   return div;
 }
 
+function createSourceEl(recipe, asLink) {
+  if (recipe.isOwn) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "recipe-source recipe-source-btn";
+    btn.textContent = "📖 Eigenes Rezept";
+    btn.addEventListener("pointerdown", (e) => e.stopPropagation());
+    btn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      openRecipeDetail(recipe);
+    });
+    return btn;
+  }
+  if (asLink) {
+    const a = document.createElement("a");
+    a.className = "recipe-source";
+    a.href = recipe.sourceUrl;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.textContent = hostnameFromUrl(recipe.sourceUrl);
+    a.addEventListener("pointerdown", (e) => e.stopPropagation());
+    return a;
+  }
+  const div = document.createElement("div");
+  div.className = "recipe-source";
+  div.textContent = hostnameFromUrl(recipe.sourceUrl);
+  return div;
+}
+
 function createRecipeCard(recipe, { draggable = false, showActions = false } = {}) {
   const card = document.createElement("div");
   card.className = "recipe-card";
@@ -260,13 +319,7 @@ function createRecipeCard(recipe, { draggable = false, showActions = false } = {
   const title = document.createElement("div");
   title.className = "recipe-title";
   title.textContent = recipe.title;
-  const source = document.createElement("a");
-  source.className = "recipe-source";
-  source.href = recipe.sourceUrl;
-  source.target = "_blank";
-  source.rel = "noopener noreferrer";
-  source.textContent = hostnameFromUrl(recipe.sourceUrl);
-  source.addEventListener("pointerdown", (e) => e.stopPropagation());
+  const source = createSourceEl(recipe, true);
   body.append(title, source);
   if (recipe.labels && recipe.labels.length) {
     const labelsEl = document.createElement("div");
@@ -329,9 +382,7 @@ function createAssignedCard(recipe, dayKey) {
   const title = document.createElement("div");
   title.className = "recipe-title";
   title.textContent = recipe.title;
-  const source = document.createElement("div");
-  source.className = "recipe-source";
-  source.textContent = hostnameFromUrl(recipe.sourceUrl);
+  const source = createSourceEl(recipe, false);
   info.append(title, source);
   wrap.appendChild(info);
 
@@ -586,7 +637,10 @@ async function syncRecipe(recipe) {
         type: "recipe",
         id: recipe.id,
         title: recipe.title,
-        sourceUrl: recipe.sourceUrl,
+        isOwn: !!recipe.isOwn,
+        sourceUrl: recipe.sourceUrl || "",
+        ingredients: recipe.ingredients || "",
+        instructions: recipe.instructions || "",
         thumbUrl: recipe.thumbUrl || "",
         labels: recipe.labels || [],
         note: recipe.note || "",
@@ -719,16 +773,30 @@ function updateThumbPreview() {
 rThumbPreviewEl.addEventListener("error", () => rThumbPreviewWrapEl.classList.add("hidden"));
 rThumbUrlInput.addEventListener("input", updateThumbPreview);
 
+function updateOwnRecipeUI() {
+  const isOwn = rIsOwnInput.checked;
+  sourceUrlFieldEl.classList.toggle("hidden", isOwn);
+  rSourceUrlInput.required = !isOwn;
+  ownRecipeFieldsEl.classList.toggle("hidden", !isOwn);
+}
+rIsOwnInput.addEventListener("change", updateOwnRecipeUI);
+
 function openRecipeModal(recipe) {
   editingRecipeId = recipe ? recipe.id : null;
   recipeModalTitleEl.textContent = recipe ? "Rezept bearbeiten" : "Neues Rezept";
   rTitleInput.value = recipe?.title || "";
+  rIsOwnInput.checked = !!recipe?.isOwn;
   rSourceUrlInput.value = recipe?.sourceUrl || "";
+  rIngredientsInput.value = recipe?.ingredients || "";
+  rInstructionsInput.value = recipe?.instructions || "";
   rThumbUrlInput.value = recipe?.thumbUrl || "";
   rLabelsInput.value = (recipe?.labels || []).join(", ");
   rNoteInput.value = recipe?.note || "";
   autoThumbStatusEl.textContent = "";
+  thumbSuggestionsEl.innerHTML = "";
+  thumbSuggestionsEl.classList.add("hidden");
   deleteRecipeBtn.classList.toggle("hidden", !recipe);
+  updateOwnRecipeUI();
   updateThumbPreview();
   recipeModal.classList.remove("hidden");
 }
@@ -737,17 +805,59 @@ function closeRecipeModal() {
   recipeModal.classList.add("hidden");
 }
 
+// --- Rezept-Detailansicht (eigene Rezepte) ---
+
+function openRecipeDetail(recipe) {
+  detailRecipeId = recipe.id;
+  detailTitleEl.textContent = recipe.title;
+  if (recipe.thumbUrl) {
+    detailThumbEl.src = recipe.thumbUrl;
+    detailThumbEl.classList.remove("hidden");
+  } else {
+    detailThumbEl.classList.add("hidden");
+  }
+  detailLabelsEl.innerHTML = "";
+  (recipe.labels || []).forEach((l) => {
+    const badge = document.createElement("span");
+    badge.className = "recipe-label-badge";
+    badge.textContent = l;
+    detailLabelsEl.appendChild(badge);
+  });
+  detailIngredientsWrapEl.classList.toggle("hidden", !recipe.ingredients);
+  detailIngredientsEl.textContent = recipe.ingredients || "";
+  detailInstructionsWrapEl.classList.toggle("hidden", !recipe.instructions);
+  detailInstructionsEl.textContent = recipe.instructions || "";
+  detailNoteWrapEl.classList.toggle("hidden", !recipe.note);
+  detailNoteEl.textContent = recipe.note || "";
+  recipeDetailModal.classList.remove("hidden");
+}
+
+function closeRecipeDetail() {
+  recipeDetailModal.classList.add("hidden");
+}
+
+closeDetailBtn.addEventListener("click", closeRecipeDetail);
+editFromDetailBtn.addEventListener("click", () => {
+  const recipe = getRecipes().find((r) => r.id === detailRecipeId);
+  closeRecipeDetail();
+  if (recipe) openRecipeModal(recipe);
+});
+
 addRecipeBtn.addEventListener("click", () => openRecipeModal(null));
 cancelRecipeBtn.addEventListener("click", closeRecipeModal);
 
 recipeForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const title = rTitleInput.value.trim();
+  const isOwn = rIsOwnInput.checked;
   const sourceUrl = rSourceUrlInput.value.trim();
+  const ingredients = rIngredientsInput.value.trim();
+  const instructions = rInstructionsInput.value.trim();
   const thumbUrl = rThumbUrlInput.value.trim();
   const labels = parseLabelsInput(rLabelsInput.value);
   const note = rNoteInput.value.trim();
-  if (!title || !sourceUrl) return;
+  if (!title) return;
+  if (!isOwn && !sourceUrl) return;
 
   const recipes = getRecipes();
   let recipe;
@@ -755,7 +865,10 @@ recipeForm.addEventListener("submit", (e) => {
     recipe = recipes.find((r) => r.id === editingRecipeId);
     if (recipe) {
       recipe.title = title;
+      recipe.isOwn = isOwn;
       recipe.sourceUrl = sourceUrl;
+      recipe.ingredients = ingredients;
+      recipe.instructions = instructions;
       recipe.thumbUrl = thumbUrl;
       recipe.labels = labels;
       recipe.note = note;
@@ -765,7 +878,10 @@ recipeForm.addEventListener("submit", (e) => {
     recipe = {
       id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       title,
+      isOwn,
       sourceUrl,
+      ingredients,
+      instructions,
       thumbUrl,
       labels,
       note,
@@ -795,31 +911,95 @@ deleteRecipeBtn.addEventListener("click", () => {
   syncRecipeDelete(editingRecipeId);
 });
 
-// --- Auto-thumbnail lookup ---
+// --- Bildvorschau / -suche ---
 
-autoThumbBtn.addEventListener("click", async () => {
-  const url = rSourceUrlInput.value.trim();
-  if (!url) {
-    autoThumbStatusEl.textContent = "Bitte zuerst eine Quelle-URL eintragen.";
+async function searchGoogleImages(query) {
+  const key = getGoogleApiKey();
+  const cx = getGoogleCseId();
+  const url = `https://www.googleapis.com/customsearch/v1?key=${encodeURIComponent(key)}&cx=${encodeURIComponent(cx)}&q=${encodeURIComponent(query)}&searchType=image&num=8&safe=active`;
+  const res = await fetch(url);
+  const data = await res.json();
+  if (!res.ok) throw new Error(data?.error?.message || "Google-Suche fehlgeschlagen");
+  return (data.items || []).map((item) => ({
+    url: item.link,
+    thumbnail: item.image?.thumbnailLink || item.link,
+  }));
+}
+
+function renderThumbSuggestions(results) {
+  thumbSuggestionsEl.innerHTML = "";
+  if (!results.length) {
+    thumbSuggestionsEl.classList.add("hidden");
     return;
   }
-  autoThumbStatusEl.textContent = "Suche Vorschaubild…";
+  results.forEach((r) => {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "thumb-suggestion";
+    const img = document.createElement("img");
+    img.src = r.thumbnail;
+    img.alt = "";
+    img.loading = "lazy";
+    img.addEventListener("error", () => btn.remove());
+    btn.appendChild(img);
+    btn.addEventListener("click", () => {
+      rThumbUrlInput.value = r.url;
+      updateThumbPreview();
+      thumbSuggestionsEl.querySelectorAll(".thumb-suggestion").forEach((b) => b.classList.remove("selected"));
+      btn.classList.add("selected");
+    });
+    thumbSuggestionsEl.appendChild(btn);
+  });
+  thumbSuggestionsEl.classList.remove("hidden");
+}
+
+async function tryOgImageScrape(url) {
+  const proxied = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+  const res = await fetch(proxied);
+  if (!res.ok) throw new Error("fetch failed");
+  const html = await res.text();
+  const match =
+    html.match(/<meta[^>]+(?:property|name)=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
+    html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']og:image["']/i);
+  return match ? match[1] : null;
+}
+
+autoThumbBtn.addEventListener("click", async () => {
+  const title = rTitleInput.value.trim();
+  const sourceUrl = rSourceUrlInput.value.trim();
+  if (!title && !sourceUrl) {
+    autoThumbStatusEl.textContent = "Bitte zuerst einen Titel eintragen.";
+    return;
+  }
+  autoThumbStatusEl.textContent = "Suche Bilder…";
   autoThumbBtn.disabled = true;
+  thumbSuggestionsEl.innerHTML = "";
+  thumbSuggestionsEl.classList.add("hidden");
   try {
-    const proxied = `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-    const res = await fetch(proxied);
-    if (!res.ok) throw new Error("fetch failed");
-    const html = await res.text();
-    const match =
-      html.match(/<meta[^>]+(?:property|name)=["']og:image["'][^>]+content=["']([^"']+)["']/i) ||
-      html.match(/<meta[^>]+content=["']([^"']+)["'][^>]+(?:property|name)=["']og:image["']/i);
-    if (match && match[1]) {
-      rThumbUrlInput.value = match[1];
+    if (getGoogleApiKey() && getGoogleCseId()) {
+      const query = title || hostnameFromUrl(sourceUrl);
+      const results = await searchGoogleImages(query);
+      if (results.length) {
+        renderThumbSuggestions(results);
+        autoThumbStatusEl.textContent = `${results.length} Vorschläge gefunden – zum Übernehmen anklicken.`;
+      } else {
+        autoThumbStatusEl.textContent = "Keine Bilder gefunden – bitte Bild-URL manuell eintragen.";
+      }
+      return;
+    }
+    if (!sourceUrl) {
+      autoThumbStatusEl.textContent =
+        "Für Bildvorschläge bei eigenen Rezepten bitte die Google-Bildersuche in den Einstellungen einrichten (siehe README), oder Bild-URL manuell eintragen.";
+      return;
+    }
+    const found = await tryOgImageScrape(sourceUrl);
+    if (found) {
+      rThumbUrlInput.value = found;
       updateThumbPreview();
       autoThumbStatusEl.textContent = "Vorschaubild gefunden ✓";
     } else {
       autoThumbStatusEl.textContent =
-        "Kein Vorschaubild gefunden – bitte Bild-URL manuell eintragen (Rechtsklick auf ein Bild der Rezeptseite → „Bildadresse kopieren“).";
+        "Kein Vorschaubild gefunden – bitte Bild-URL manuell eintragen, oder Google-Bildersuche in den Einstellungen einrichten für mehr Auswahl.";
     }
   } catch (err) {
     autoThumbStatusEl.textContent = "Automatischer Abruf fehlgeschlagen – bitte Bild-URL manuell eintragen.";
@@ -832,6 +1012,8 @@ autoThumbBtn.addEventListener("click", async () => {
 
 settingsBtn.addEventListener("click", () => {
   scriptUrlInput.value = getScriptUrl();
+  googleApiKeyInput.value = getGoogleApiKey();
+  googleCseIdInput.value = getGoogleCseId();
   themeSelect.value = localStorage.getItem(STORAGE_THEME) || "system";
   settingsModal.classList.remove("hidden");
 });
@@ -840,6 +1022,8 @@ closeSettingsBtn.addEventListener("click", () => settingsModal.classList.add("hi
 
 saveSettingsBtn.addEventListener("click", () => {
   localStorage.setItem(STORAGE_SCRIPT_URL, scriptUrlInput.value.trim());
+  localStorage.setItem(STORAGE_GOOGLE_API_KEY, googleApiKeyInput.value.trim());
+  localStorage.setItem(STORAGE_GOOGLE_CSE_ID, googleCseIdInput.value.trim());
   localStorage.setItem(STORAGE_THEME, themeSelect.value);
   applyTheme();
   updateSyncStatus();

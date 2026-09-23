@@ -73,10 +73,26 @@
         Titel *
         <input type="text" id="rTitle" required placeholder="z. B. Spaghetti Bolognese" />
       </label>
-      <label>
-        Quelle-URL *
-        <input type="url" id="rSourceUrl" required placeholder="https://cookidoo.de/recipes/recipe/de-DE/..." />
+      <label class="toggle-row">
+        <input type="checkbox" id="rIsOwn" />
+        <span>Eigenes Rezept <span class="field-hint">(kein Link – Zutaten &amp; Zubereitung direkt hier hinterlegen)</span></span>
       </label>
+      <div id="sourceUrlField">
+        <label>
+          Quelle-URL *
+          <input type="url" id="rSourceUrl" required placeholder="https://cookidoo.de/recipes/recipe/de-DE/..." />
+        </label>
+      </div>
+      <div id="ownRecipeFields" class="hidden">
+        <label>
+          Zutaten
+          <textarea id="rIngredients" rows="4" placeholder="z. B.&#10;200 g Mehl&#10;2 Eier&#10;250 ml Milch"></textarea>
+        </label>
+        <label>
+          Zubereitung
+          <textarea id="rInstructions" rows="6" placeholder="Schritt-für-Schritt-Anleitung"></textarea>
+        </label>
+      </div>
       <label>
         Bild-URL
         <div class="input-with-button">
@@ -85,6 +101,7 @@
         </div>
         <span id="autoThumbStatus" class="field-hint"></span>
       </label>
+      <div id="thumbSuggestions" class="thumb-suggestions hidden"></div>
       <div id="rThumbPreviewWrap" class="thumb-preview-wrap hidden">
         <img id="rThumbPreview" class="thumb-preview" alt="Vorschau" />
       </div>
@@ -106,6 +123,31 @@
   </div>
 </div>
 
+<!-- Modal: Rezept-Detailansicht (eigene Rezepte) -->
+<div id="recipeDetailModal" class="modal hidden">
+  <div class="modal-content">
+    <h2 id="detailTitle"></h2>
+    <img id="detailThumb" class="thumb-preview hidden" alt="" />
+    <div id="detailLabels" class="recipe-labels"></div>
+    <div id="detailIngredientsWrap" class="hidden">
+      <h3>Zutaten</h3>
+      <p id="detailIngredients" class="detail-text"></p>
+    </div>
+    <div id="detailInstructionsWrap" class="hidden">
+      <h3>Zubereitung</h3>
+      <p id="detailInstructions" class="detail-text"></p>
+    </div>
+    <div id="detailNoteWrap" class="hidden">
+      <h3>Notiz</h3>
+      <p id="detailNote" class="detail-text"></p>
+    </div>
+    <div class="btn-row">
+      <button type="button" id="editFromDetailBtn" class="btn primary">Bearbeiten</button>
+      <button type="button" id="closeDetailBtn" class="btn">Schließen</button>
+    </div>
+  </div>
+</div>
+
 <!-- Modal: Einstellungen -->
 <div id="settingsModal" class="modal hidden">
   <div class="modal-content">
@@ -115,6 +157,15 @@
       <input type="url" id="scriptUrl" placeholder="https://script.google.com/macros/s/.../exec" />
     </label>
     <p class="field-hint">Verbindet die App mit dem gemeinsamen Google Sheet der Familie. Siehe README für die Einrichtung.</p>
+    <label>
+      Google-Suche API-Key
+      <input type="text" id="googleApiKey" placeholder="AIza..." />
+    </label>
+    <label>
+      Google-Suche Suchmaschinen-ID (cx)
+      <input type="text" id="googleCseId" placeholder="a1b2c3d4e5..." />
+    </label>
+    <p class="field-hint">Für Bildvorschläge bei "Automatisch versuchen" im Rezeptformular. Einrichtung siehe README.</p>
     <label>
       Design
       <select id="themeSelect">

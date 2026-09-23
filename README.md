@@ -11,7 +11,8 @@ Progressive Web App zur gemeinsamen Essensplanung für die Familie. Rezepte-Pool
 ## Funktionen
 
 - **Rezepte-Pool**: Rezepte mit Titel, Quelle-URL (beliebige Website oder Cookidoo-Link), Bild-URL, Labels und Notiz anlegen, bearbeiten, löschen.
-- **Automatisches Vorschaubild**: Beim Anlegen eines Rezepts kann über "Automatisch versuchen" das Vorschaubild (`og:image`) der Quell-Website automatisch geholt werden (über einen öffentlichen CORS-Proxy). Klappt das nicht (z. B. bei Cookidoo, das Inhalte per JavaScript nachlädt), einfach die Bild-URL manuell eintragen – z. B. per Rechtsklick auf ein Bild der Rezeptseite → "Bildadresse kopieren".
+- **Eigene Rezepte**: Beim Anlegen eines Rezepts schaltet der Regler "Eigenes Rezept" die Quelle-URL-Abfrage aus und blendet stattdessen Felder für Zutaten und Zubereitung ein. Solche Rezepte zeigen in der Pool-/Wochenübersicht statt eines externen Links ein "📖 Eigenes Rezept"-Feld – ein Klick darauf öffnet eine Detailansicht mit Zutaten, Zubereitung, Bild und Notiz direkt in der App.
+- **Bildvorschläge**: "Automatisch versuchen" sucht (wenn in den Einstellungen eine Google-Bildersuche hinterlegt ist) passende Bilder über die Google Custom Search API und zeigt mehrere Vorschläge zur Auswahl an. Ohne eingerichtete Bildersuche wird ersatzweise versucht, das Vorschaubild (`og:image`) der Quell-Website zu holen (über einen öffentlichen CORS-Proxy, nur bei Rezepten mit Quelle-URL). In beiden Fällen lässt sich die Bild-URL zusätzlich jederzeit manuell eintragen – z. B. per Rechtsklick auf ein Bild → "Bildadresse kopieren".
 - **Labels & Filter**: Im Rezeptformular lassen sich beliebige, mit Komma getrennte Labels eintragen (z. B. "vegetarisch, schnell, kinderfreundlich"). Sie erscheinen als Filter-Chips über dem Rezepte-Pool und im Wochenplan – ein Klick blendet alle Rezepte ohne dieses Label aus.
 - **Wochenplan**: Rezepte aus dem Pool per Drag & Drop am Griff-Symbol (⠿, Maus oder Touch) auf einen Wochentag ziehen, zwischen Tagen verschieben oder per ✕ wieder entfernen. Über die Pfeile lässt sich zwischen den Kalenderwochen navigieren.
 - **Speichern**: Änderungen werden laufend automatisch synchronisiert; "Woche speichern" stößt zusätzlich eine sofortige Synchronisierung aller noch offenen Änderungen an. Der Button ⟳ oben lädt den aktuellen Stand aus dem Sheet (z. B. wenn ein Familienmitglied auf einem anderen Gerät etwas geändert hat).
@@ -39,6 +40,19 @@ Die Web-App-URL der Familie ist bereits fest in [`app.js`](app.js) als `DEFAULT_
 Soll stattdessen ein anderes/eigenes Sheet verwendet werden (z. B. zum Testen), lässt sich das über das Zahnrad-Symbol (⚙) → Apps-Script-URL überschreiben; die dort eingetragene URL hat Vorrang vor dem Standardwert.
 
 Da die URL öffentlich im Repo sichtbar ist (Zugriff über "Jeder" ist notwendig, damit die App ohne Google-Login lesen/schreiben kann), kennt theoretisch jeder mit Repo-Zugriff die URL und könnte Daten im Sheet ändern. Für ein privates Familien-Tool ist das ein bewusst in Kauf genommenes, geringes Risiko.
+
+## Google-Bildersuche einrichten (optional, für Bildvorschläge)
+
+Ohne diese Einrichtung funktioniert die App weiterhin – "Automatisch versuchen" nutzt dann nur den einfacheren `og:image`-Fallback bzw. es muss die Bild-URL manuell eingetragen werden. Für die komfortablere Google-Bildersuche mit mehreren Vorschlägen:
+
+1. [Google Cloud Console](https://console.cloud.google.com/) öffnen, ein (kostenloses) Projekt anlegen oder ein bestehendes verwenden.
+2. Unter **APIs & Dienste → Bibliothek** nach "Custom Search API" suchen und aktivieren.
+3. Unter **APIs & Dienste → Anmeldedaten** einen neuen **API-Schlüssel** erstellen. Empfohlen: den Schlüssel über "Anwendungseinschränkungen → HTTP-Verweis-URLs" auf die eigene GitHub-Pages-Domain (`https://<benutzername>.github.io/*`) einschränken.
+4. Auf [Programmable Search Engine](https://programmablesearchengine.google.com/) eine neue Suchmaschine anlegen. Bei "Websites durchsuchen" die Option **"Das gesamte Web durchsuchen"** wählen, danach unter "Einstellungen → Bildsuche" die Bildersuche aktivieren.
+5. Die **Suchmaschinen-ID (cx)** aus den Suchmaschinen-Einstellungen kopieren.
+6. In der App unter ⚙ Einstellungen den API-Key und die cx-ID eintragen und speichern.
+
+Der kostenlose Kontingentrahmen liegt bei 100 Suchanfragen pro Tag – für eine Familie im normalen Gebrauch üblicherweise ausreichend. Genau wie die Apps-Script-URL landet auch dieser API-Key sichtbar im Browser-Speicher des jeweiligen Geräts (nicht im Repo-Code) – dank der Domain-Einschränkung in Schritt 3 ist er außerhalb der eigenen App aber nicht nutzbar.
 
 ## Design
 

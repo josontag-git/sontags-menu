@@ -32,7 +32,10 @@ function jsonOutput(obj) {
 
 // --- Rezepte ---
 
-const RECIPE_HEADERS = ["ID", "Titel", "Quelle-URL", "Bild-URL", "Labels", "Notiz", "Zuletzt aktualisiert"];
+const RECIPE_HEADERS = [
+  "ID", "Titel", "Quelle-URL", "Bild-URL", "Labels", "Notiz", "Zuletzt aktualisiert",
+  "Eigenes Rezept", "Zutaten", "Zubereitung",
+];
 
 function upsertRecipeRow(data) {
   const sheet = getOrCreateSheet(SHEET_RECIPES, RECIPE_HEADERS);
@@ -44,6 +47,9 @@ function upsertRecipeRow(data) {
     (data.labels || []).join(", "),
     data.note || "",
     new Date(),
+    !!data.isOwn,
+    data.ingredients || "",
+    data.instructions || "",
   ]);
 }
 
@@ -64,7 +70,7 @@ function readRecipes() {
   const sheet = getOrCreateSheet(SHEET_RECIPES, RECIPE_HEADERS);
   const lastRow = sheet.getLastRow();
   if (lastRow <= 1) return [];
-  const rows = sheet.getRange(2, 1, lastRow - 1, 6).getValues();
+  const rows = sheet.getRange(2, 1, lastRow - 1, 10).getValues();
   return rows
     .filter((r) => r[0])
     .map((r) => ({
@@ -77,6 +83,9 @@ function readRecipes() {
         .map((s) => s.trim())
         .filter(Boolean),
       note: r[5] || "",
+      isOwn: r[7] === true,
+      ingredients: r[8] || "",
+      instructions: r[9] || "",
     }));
 }
 
