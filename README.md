@@ -15,7 +15,9 @@ Progressive Web App zur gemeinsamen Essensplanung für die Familie. Rezepte-Pool
 - **Bildvorschläge**: "Automatisch versuchen" sucht (wenn in den Einstellungen eine Google-Bildersuche hinterlegt ist) passende Bilder über die Google Custom Search API und zeigt mehrere Vorschläge zur Auswahl an. Ohne eingerichtete Bildersuche wird ersatzweise versucht, das Vorschaubild (`og:image`) der Quell-Website zu holen (über einen öffentlichen CORS-Proxy, nur bei Rezepten mit Quelle-URL). In beiden Fällen lässt sich die Bild-URL zusätzlich jederzeit manuell eintragen – z. B. per Rechtsklick auf ein Bild → "Bildadresse kopieren".
 - **Labels & Filter**: Im Rezeptformular lassen sich beliebige, mit Komma getrennte Labels eintragen (z. B. "vegetarisch, schnell, kinderfreundlich"). Sie erscheinen als Filter-Chips über dem Rezepte-Pool und im Wochenplan – ein Klick blendet alle Rezepte ohne dieses Label aus.
 - **Wochenplan**: Rezepte aus dem Pool per Drag & Drop am Griff-Symbol (⠿, Maus oder Touch) auf einen Wochentag ziehen, zwischen Tagen verschieben oder per ✕ wieder entfernen. Über die Pfeile lässt sich zwischen den Kalenderwochen navigieren.
-- **Speichern**: Änderungen werden laufend automatisch synchronisiert; "Woche speichern" stößt zusätzlich eine sofortige Synchronisierung aller noch offenen Änderungen an. Der Button ⟳ oben lädt den aktuellen Stand aus dem Sheet (z. B. wenn ein Familienmitglied auf einem anderen Gerät etwas geändert hat).
+- **Speichern**: Änderungen werden laufend automatisch synchronisiert; "Woche speichern" stößt zusätzlich eine sofortige Synchronisierung aller noch offenen Änderungen an.
+- **Update-Button ⟳**: Lädt nicht nur die Rezept-/Wochenplandaten aus dem Sheet neu, sondern stößt auch einen Update-Check des Service Workers an und lädt die Seite danach neu – damit ist sichergestellt, dass immer die zuletzt veröffentlichte Version der App läuft, auch wenn vorher eine ältere Version im Cache lag. Die App-Shell (HTML/CSS/JS) wird generell per "Network-first" geladen, ein normales Neuladen der Seite reicht bei bestehender Internetverbindung also bereits aus, um aktuell zu bleiben.
+- **Versionsanzeige**: Im Footer steht die aktuelle Release-Version sowie Datum/Uhrzeit der Veröffentlichung.
 
 ## Google Sheet einrichten (einmalig)
 
@@ -65,6 +67,16 @@ Dieses Repo ist für GitHub Pages vorbereitet – kein Server nötig, alles läu
 1. Neues (leeres) GitHub-Repository anlegen und dieses Projekt dorthin pushen.
 2. Im Repo unter **Settings → Pages**: Branch `main`, Ordner `/ (root)` auswählen.
 3. Nach kurzer Zeit ist die App unter `https://<benutzername>.github.io/<repo-name>/` erreichbar.
+
+## Neues Release veröffentlichen (für Entwickler)
+
+Bei jeder inhaltlichen Änderung an `app.js`, `index.html` oder `style.css`:
+
+1. `APP_VERSION` und `APP_RELEASED_AT` in [`app.js`](app.js) auf die neue Version/den aktuellen Zeitpunkt setzen (erscheint im Footer).
+2. `CACHE_NAME` in [`sw.js`](sw.js) hochzählen.
+3. Committen und pushen.
+
+Nutzer:innen bekommen die neue Version automatisch beim nächsten Öffnen (Network-first) oder sofort per Klick auf ⟳.
 
 ## App-Icon
 

@@ -10,6 +10,11 @@ const STORAGE_GOOGLE_CSE_ID = "googleCseId";
 // Standard-Verbindung zum gemeinsamen Familien-Sheet. In den Einstellungen ueberschreibbar.
 const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhZOVVg8KdMcjCF7uwjXXsK7DJH_QvxpaGGoU3RT0MtnHQumsFFIkwJtVXr0H1WTk/exec";
 
+// Bei jedem Release von Hand hochzaehlen/aktualisieren - erscheint im Footer und
+// dient dem Update-Button als sichtbarer Beleg, dass der neueste Stand geladen ist.
+const APP_VERSION = "1.0.0";
+const APP_RELEASED_AT = "2026-09-23T15:41:00+02:00";
+
 const DAYS = [
   { key: "mon", label: "Mo" },
   { key: "tue", label: "Di" },
@@ -25,6 +30,7 @@ const DAYS = [
 const tabBtns = document.querySelectorAll(".tab-btn");
 const views = document.querySelectorAll(".view");
 const refreshBtn = document.getElementById("refreshBtn");
+const appVersionInfoEl = document.getElementById("appVersionInfo");
 
 const weekTitleEl = document.getElementById("weekTitle");
 const weekRangeEl = document.getElementById("weekRange");
@@ -195,6 +201,15 @@ function renderLabelFilterBar(container, recipes) {
 
 function pad(n) {
   return String(n).padStart(2, "0");
+}
+
+function formatReleaseTimestamp(iso) {
+  const d = new Date(iso);
+  return `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.${d.getFullYear()}, ${pad(d.getHours())}:${pad(d.getMinutes())} Uhr`;
+}
+
+function renderVersionInfo() {
+  appVersionInfoEl.textContent = `Version ${APP_VERSION} · ${formatReleaseTimestamp(APP_RELEASED_AT)}`;
 }
 
 function getMonday(date) {
@@ -757,7 +772,20 @@ function mergeRemote(data) {
   renderWeek();
 }
 
-refreshBtn.addEventListener("click", () => pullFromSheet(true));
+refreshBtn.addEventListener("click", async () => {
+  refreshBtn.disabled = true;
+  flashSyncStatus("Suche nach Updates…");
+  try {
+    if ("serviceWorker" in navigator) {
+      const reg = await navigator.serviceWorker.getRegistration();
+      if (reg) await reg.update();
+    }
+  } catch (err) {
+    // Update-Check fehlgeschlagen - trotzdem neu laden, die App-Shell wird dank
+    // Network-first-Strategie im Service Worker ohnehin frisch vom Netz geholt.
+  }
+  window.location.reload();
+});
 
 // --- Recipe modal ---
 
@@ -1034,6 +1062,7 @@ saveSettingsBtn.addEventListener("click", () => {
 // --- Init ---
 
 applyTheme();
+renderVersionInfo();
 renderPool();
 renderWeek();
 if (getScriptUrl()) pullFromSheet(false);

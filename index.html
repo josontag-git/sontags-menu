@@ -24,7 +24,7 @@
     <button class="tab-btn" data-view="pool" role="tab" aria-selected="false">Rezepte</button>
   </nav>
   <div class="header-actions">
-    <button id="refreshBtn" class="icon-btn" title="Aktualisieren" aria-label="Aktualisieren">⟳</button>
+    <button id="refreshBtn" class="icon-btn" title="App &amp; Daten aktualisieren" aria-label="App und Daten aktualisieren">⟳</button>
     <button id="settingsBtn" class="icon-btn" title="Einstellungen" aria-label="Einstellungen">⚙</button>
   </div>
 </header>
@@ -63,6 +63,10 @@
     <p id="poolEmptyHint" class="empty-hint hidden">Noch keine Rezepte im Pool. Lege dein erstes Rezept an!</p>
   </section>
 </main>
+
+<footer class="app-footer">
+  <span id="appVersionInfo"></span>
+</footer>
 
 <!-- Modal: Rezept anlegen/bearbeiten -->
 <div id="recipeModal" class="modal hidden">
