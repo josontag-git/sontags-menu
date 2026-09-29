@@ -12,8 +12,8 @@ const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhZOVVg8KdM
 
 // Bei jedem Release von Hand hochzaehlen/aktualisieren - erscheint im Footer und
 // dient dem Update-Button als sichtbarer Beleg, dass der neueste Stand geladen ist.
-const APP_VERSION = "1.2.1";
-const APP_RELEASED_AT = "2026-09-29T09:17:00+02:00";
+const APP_VERSION = "1.3.0";
+const APP_RELEASED_AT = "2026-09-29T17:10:00+02:00";
 
 const DAYS = [
   { key: "mon", label: "Mo" },
@@ -59,6 +59,7 @@ const rIngredientsInput = document.getElementById("rIngredients");
 const rInstructionsInput = document.getElementById("rInstructions");
 const rThumbUrlInput = document.getElementById("rThumbUrl");
 const rLabelsInput = document.getElementById("rLabels");
+const rLabelSuggestionsEl = document.getElementById("rLabelSuggestions");
 const rNoteInput = document.getElementById("rNote");
 const autoThumbBtn = document.getElementById("autoThumbBtn");
 const autoThumbStatusEl = document.getElementById("autoThumbStatus");
@@ -196,6 +197,36 @@ function renderLabelFilterBar(container, recipes) {
     container.appendChild(chip);
   });
 }
+
+function toggleLabelInInput(label) {
+  const current = parseLabelsInput(rLabelsInput.value);
+  const idx = current.findIndex((l) => l.toLowerCase() === label.toLowerCase());
+  if (idx === -1) current.push(label);
+  else current.splice(idx, 1);
+  rLabelsInput.value = current.join(", ");
+  renderLabelSuggestions();
+}
+
+function renderLabelSuggestions() {
+  const labels = getAllLabels(getRecipes());
+  const current = parseLabelsInput(rLabelsInput.value).map((l) => l.toLowerCase());
+  rLabelSuggestionsEl.innerHTML = "";
+  if (labels.length === 0) {
+    rLabelSuggestionsEl.classList.add("hidden");
+    return;
+  }
+  rLabelSuggestionsEl.classList.remove("hidden");
+  labels.forEach((label) => {
+    const chip = document.createElement("button");
+    chip.type = "button";
+    chip.className = "label-chip";
+    chip.classList.toggle("active", current.includes(label.toLowerCase()));
+    chip.textContent = label;
+    chip.addEventListener("click", () => toggleLabelInInput(label));
+    rLabelSuggestionsEl.appendChild(chip);
+  });
+}
+rLabelsInput.addEventListener("input", renderLabelSuggestions);
 
 // --- Date helpers ---
 
@@ -826,6 +857,7 @@ function openRecipeModal(recipe) {
   deleteRecipeBtn.classList.toggle("hidden", !recipe);
   updateOwnRecipeUI();
   updateThumbPreview();
+  renderLabelSuggestions();
   recipeModal.classList.remove("hidden");
 }
 
