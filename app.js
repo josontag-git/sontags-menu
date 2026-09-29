@@ -12,8 +12,8 @@ const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhZOVVg8KdM
 
 // Bei jedem Release von Hand hochzaehlen/aktualisieren - erscheint im Footer und
 // dient dem Update-Button als sichtbarer Beleg, dass der neueste Stand geladen ist.
-const APP_VERSION = "1.1.0";
-const APP_RELEASED_AT = "2026-09-29T08:44:00+02:00";
+const APP_VERSION = "1.2.0";
+const APP_RELEASED_AT = "2026-09-29T08:58:00+02:00";
 
 const DAYS = [
   { key: "mon", label: "Mo" },
@@ -1070,3 +1070,12 @@ if (getScriptUrl()) pullFromSheet(false);
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js").catch(() => {});
 }
+
+// --- Start-Screen ---
+
+const splashScreenEl = document.getElementById("splashScreen");
+setTimeout(() => {
+  if (!splashScreenEl) return;
+  splashScreenEl.classList.add("splash-hidden");
+  setTimeout(() => splashScreenEl.remove(), 450);
+}, 900);
