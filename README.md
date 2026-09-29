@@ -2,6 +2,8 @@
 
 Progressive Web App zur gemeinsamen Essensplanung für die Familie. Rezepte-Pool anlegen, per Drag & Drop auf die Wochentage verteilen, Wochenplan speichern – synchronisiert über ein gemeinsames Google Sheet.
 
+> Arbeitest du (Mensch oder KI-Assistent) neu an diesem Projekt? [CONTEXT.md](CONTEXT.md) fasst Architektur-Entscheidungen und wichtige Gotchas aus der bisherigen Entwicklung zusammen.
+
 ## Nutzung auf dem iPhone
 
 1. Seite in Safari öffnen (GitHub-Pages-URL, siehe unten).
