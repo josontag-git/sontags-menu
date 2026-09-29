@@ -80,4 +80,4 @@ Nutzer:innen bekommen die neue Version automatisch beim nächsten Öffnen (Netwo
 
 ## App-Icon
 
-Das Icon (`icons/`) wurde aus der ursprünglich bereitgestellten Grafik "Sontag's Menu" in den benötigten PWA-Größen (192px, 512px, Apple-Touch-Icon 180px) erzeugt. Der Schriftzug auf dem Icon selbst zeigt weiterhin "Sontag's Menu", da er fest im Bild eingebrannt ist – für ein passendes Icon zum neuen Namen wird eine neue Grafik benötigt.
+Das Icon (`icons/`) zeigt den Schriftzug "We're Hungry!" und wurde aus der bereitgestellten Grafik in den benötigten PWA-Größen (192px, 512px, Apple-Touch-Icon 180px) erzeugt.
