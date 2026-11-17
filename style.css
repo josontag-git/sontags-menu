@@ -365,7 +365,7 @@ main {
 
 /* Recipe pool grid */
 
-.pool-toolbar { margin-bottom: 14px; }
+.pool-toolbar { display: flex; justify-content: center; margin-bottom: 14px; }
 
 .recipe-pool {
   display: grid;

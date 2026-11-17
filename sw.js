@@ -1,4 +1,4 @@
-const CACHE_NAME = "were-hungry-v10";
+const CACHE_NAME = "were-hungry-v11";
 
 // App-Shell: aendert sich mit jedem Release, wird per Network-first geladen,
 // damit nach einem Deploy nie eine veraltete Version haengen bleibt.

@@ -25,8 +25,8 @@
     <span class="brand-title">We're Hungry!</span>
   </div>
   <nav class="tabs" role="tablist">
-    <button class="tab-btn active" data-view="week" role="tab" aria-selected="true">Wochenplan</button>
-    <button class="tab-btn" data-view="pool" role="tab" aria-selected="false">Rezepte</button>
+    <button class="tab-btn" data-view="week" role="tab" aria-selected="false">Wochenplan</button>
+    <button class="tab-btn active" data-view="pool" role="tab" aria-selected="true">Rezepte</button>
   </nav>
   <div class="header-actions">
     <button id="refreshBtn" class="icon-btn" title="App &amp; Daten aktualisieren" aria-label="App und Daten aktualisieren">⟳</button>
@@ -36,7 +36,7 @@
 
 <main>
   <!-- Wochenplan-Ansicht -->
-  <section id="weekView" class="view active">
+  <section id="weekView" class="view">
     <div class="week-nav">
       <button id="prevWeekBtn" class="icon-btn" aria-label="Vorherige Woche">‹</button>
       <div class="week-label">
@@ -59,7 +59,7 @@
   </section>
 
   <!-- Rezepte-Pool-Ansicht -->
-  <section id="poolView" class="view">
+  <section id="poolView" class="view active">
     <div class="pool-toolbar">
       <button id="addRecipeBtn" class="btn primary">+ Neues Rezept</button>
     </div>
