@@ -12,8 +12,8 @@ const DEFAULT_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyhZOVVg8KdM
 
 // Bei jedem Release von Hand hochzaehlen/aktualisieren - erscheint im Footer und
 // dient dem Update-Button als sichtbarer Beleg, dass der neueste Stand geladen ist.
-const APP_VERSION = "1.4.0";
-const APP_RELEASED_AT = "2026-11-17T18:50:00+01:00";
+const APP_VERSION = "1.4.1";
+const APP_RELEASED_AT = "2026-11-17T19:05:00+01:00";
 
 const DAYS = [
   { key: "mon", label: "Mo" },
@@ -803,13 +803,32 @@ function mergeRemote(data) {
   renderWeek();
 }
 
+// Wartet, bis ein gerade gefundener neuer Service Worker aktiv ist, damit der
+// anschliessende Reload schon vom neuen Worker bedient wird (max. 5 Sekunden).
+function waitForNewWorker(reg) {
+  const worker = reg.installing || reg.waiting;
+  if (!worker) return Promise.resolve();
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, 5000);
+    worker.addEventListener("statechange", () => {
+      if (worker.state === "activated" || worker.state === "redundant") {
+        clearTimeout(timer);
+        resolve();
+      }
+    });
+  });
+}
+
 refreshBtn.addEventListener("click", async () => {
   refreshBtn.disabled = true;
   flashSyncStatus("Suche nach Updates…");
   try {
     if ("serviceWorker" in navigator) {
       const reg = await navigator.serviceWorker.getRegistration();
-      if (reg) await reg.update();
+      if (reg) {
+        await reg.update();
+        await waitForNewWorker(reg);
+      }
     }
   } catch (err) {
     // Update-Check fehlgeschlagen - trotzdem neu laden, die App-Shell wird dank
