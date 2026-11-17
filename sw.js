@@ -1,4 +1,4 @@
-const CACHE_NAME = "were-hungry-v11";
+const CACHE_NAME = "were-hungry-v12";
 
 // App-Shell: aendert sich mit jedem Release, wird per Network-first geladen,
 // damit nach einem Deploy nie eine veraltete Version haengen bleibt.
@@ -33,8 +33,11 @@ self.addEventListener("fetch", (event) => {
   const filename = url.pathname.split("/").pop() || "";
 
   if (SHELL_FILES.has(filename)) {
+    // cache: "no-cache" umgeht den HTTP-Cache des Browsers (GitHub Pages
+    // schickt max-age=600). Sonst kann der Browser bis zu 10 Minuten nach
+    // einem Deploy noch die alte Datei liefern, obwohl "Network-first" gilt.
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request.url, { cache: "no-cache", credentials: "same-origin" })
         .then((res) => {
           const copy = res.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
